@@ -73,11 +73,12 @@ def ap_per_class(tp, conf, pred_cls, target_cls, plot=False, save_dir='.', names
     f1 = 2 * p * r / (p + r + eps)
     names = [v for k, v in names.items() if k in unique_classes]  # list: only classes that have data
     names = {i: v for i, v in enumerate(names)}  # to dict
+    print(names)
     if plot:
-        plot_pr_curve(px, py, ap, Path(save_dir) / 'PR_curve.png', names)
-        plot_mc_curve(px, f1, Path(save_dir) / 'F1_curve.png', names, ylabel='F1')
-        plot_mc_curve(px, p, Path(save_dir) / 'P_curve.png', names, ylabel='Precision')
-        plot_mc_curve(px, r, Path(save_dir) / 'R_curve.png', names, ylabel='Recall')
+        plot_pr_curve(px, py, ap, Path(save_dir) / 'PR_curve.png')
+        plot_mc_curve(px, f1, Path(save_dir) / 'F1_curve.png',ylabel='F1')
+        plot_mc_curve(px, p, Path(save_dir) / 'P_curve.png', ylabel='Precision')
+        plot_mc_curve(px, r, Path(save_dir) / 'R_curve.png', ylabel='Recall')
 
     i = f1.mean(0).argmax()  # max F1 index
     p, r, f1 = p[:, i], r[:, i], f1[:, i]
@@ -183,7 +184,7 @@ class ConfusionMatrix:
             labels = (0 < len(names) < 99) and len(names) == self.nc  # apply names to ticklabels
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore')  # suppress empty matrix RuntimeWarning: All-NaN slice encountered
-                sn.heatmap(array, annot=self.nc < 30, annot_kws={"size": 8}, cmap='Blues', fmt='.2f', square=True,
+                sn.heatmap(array, annot=self.nc < 30, annot_kws={"size": 8}, cmap='Wistia', fmt='.2f', square=True,
                            xticklabels=names + ['background FP'] if labels else "auto",
                            yticklabels=names + ['background FN'] if labels else "auto").set_facecolor((1, 1, 1))
             fig.axes[0].set_xlabel('True')
@@ -192,7 +193,6 @@ class ConfusionMatrix:
             plt.close()
         except Exception as e:
             print(f'WARNING: ConfusionMatrix plot failure: {e}')
-
     def print(self):
         for i in range(self.nc + 1):
             print(' '.join(map(str, self.matrix[i])))
@@ -310,8 +310,8 @@ def plot_pr_curve(px, py, ap, save_dir='pr_curve.png', names=()):
     if 0 < len(names) < 21:  # display per-class legend if < 21 classes
         for i, y in enumerate(py.T):
             ax.plot(px, y, linewidth=1, label=f'{names[i]} {ap[i, 0]:.3f}')  # plot(recall, precision)
-    else:
-        ax.plot(px, py, linewidth=1, color='grey')  # plot(recall, precision)
+    # else:
+    #     ax.plot(px, py, linewidth=1, color='grey')  # plot(recall, precision)
 
     ax.plot(px, py.mean(1), linewidth=3, color='blue', label='all classes %.3f mAP@0.5' % ap[:, 0].mean())
     ax.set_xlabel('Recall')
@@ -330,8 +330,8 @@ def plot_mc_curve(px, py, save_dir='mc_curve.png', names=(), xlabel='Confidence'
     if 0 < len(names) < 21:  # display per-class legend if < 21 classes
         for i, y in enumerate(py):
             ax.plot(px, y, linewidth=1, label=f'{names[i]}')  # plot(confidence, metric)
-    else:
-        ax.plot(px, py.T, linewidth=1, color='grey')  # plot(confidence, metric)
+    # else:
+    #     ax.plot(px, py.T, linewidth=1, color='grey')  # plot(confidence, metric)
 
     y = py.mean(0)
     ax.plot(px, y, linewidth=3, color='blue', label=f'all classes {y.max():.2f} at {px[y.argmax()]:.3f}')
